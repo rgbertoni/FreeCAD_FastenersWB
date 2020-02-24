@@ -145,7 +145,9 @@ standard_diameters = {
   'ISO4033': ('M5',   'M36'), # ISO 4033 Hexagon nuts, Style 2
   'ISO4035': ('M1.6', 'M64'), # ISO 4035 Hexagon thin nuts, chamfered
   'ISO4036': ('M1.6', 'M10'), # ISO 4035 Hexagon thin nuts, unchamfered, todo no function coded
-  'EN1661':  ('M5',   'M20')} # EN 1661 Hexagon nuts with flange
+  'EN1661':  ('M5',   'M20'), # EN 1661 Hexagon nuts with flange
+  'A325':    ('12.7', '25.4')
+  } 
 
 # ISO 4017 Hex-head-screw
 #           P,    c,  dw,    e,     k,   r,   s
@@ -328,6 +330,7 @@ iso4014length = {
   '500':(496.85, 503.15)
   }
 
+
 # range of typical screw lengths
 #    min_length,  max_length
 iso4014range = {
@@ -361,6 +364,76 @@ iso4014range = {
   '(M60)':('220','500'),
   'M64': ('260','500')
   }
+
+
+# A325 Hex-head-bolt
+#          P,     b1,    b2,    b3,    c,    dw,    e,     k,     r,    s
+A325head={
+  '12.7':  (1.95, 25.4,  25.4,  25.4,  0.41, 21.59, 25.65, 7.940, 0.79, 22.23),
+  '15.88': (2.31, 31.75, 31.75, 31.75, 0.41, 26.19, 31.17, 9.920, 1.57, 26.99),
+  '19.05': (2.54, 35.05, 35.05, 35.05, 0.41, 30.78, 36.65, 11.91, 1.57, 31.75),
+  '22.23': (2.82, 38.1,  38.1,  38.1,  0.41, 35.41, 42.16, 13.89, 1.57, 36.51),
+  '25.4':  (3.18, 44.45, 44.45, 44.45, 0.41, 40.01, 47.65, 15.48, 2.36, 41.28),
+  '28.58': (3.63, 50.8,  50.8,  50.8,  0.41, 44.60, 53.16, 17.46, 2.36, 46.04),
+  '31.75': (3.63, 50.8,  50.8,  50.8,  0.41, 49.23, 58.65, 19.84, 2.36, 50.80),
+  '34.92': (4.23, 57.15, 57.15, 57.15, 0.41, 53.82, 64.16, 21.43, 2.36, 55.56),
+  '38.1':  (4.23, 57.15, 57.15, 57.15, 0.41, 58.42, 69.65, 23.81, 2.36, 60.33),
+  }
+
+
+lengList = [
+  25.40,
+  31.75,
+  38.10,
+  44.45,
+  50.80,
+  57.15,
+  63.50,
+  69.85,
+  76.20,
+  82.55,
+  88.90,
+  95.25,
+  101.60,
+  107.95,
+  114.30,
+  120.65,
+  127.00,
+  133.35,
+  139.70,
+  146.05,
+  152.40,
+  158.75,
+  165.10,
+  171.45,
+  177.80,
+  184.15,
+  190.50,
+  196.85,
+  203.20,
+  209.55,
+  215.90,
+  222.25,
+  228.60]
+
+
+A325length = {}
+
+
+for leng in lengList:
+  A325length.update({str(leng): (leng, leng)})
+
+
+A325range = {
+  '12.7':  ('25.4',  '152.4'),
+  '15.88': ('25.4',  '203.2'),
+  '19.05': ('25.4',  '203.2'),
+  '22.23': ('31.75', '215.19'),
+  '25.4':  ('31.75', '215.19'),
+  '28.58': ('38.1',  '215.19'),
+  '31.75': ('38.1',  '228.6'),
+  '34.92': ('44.45', '228.6'),
+  '38.1':  ('44.45', '228.6')}
 
 
 # EN 1662 Hexagon bolts with flange, small series
@@ -1309,6 +1382,20 @@ iso7089def={
   }
 
 
+# ASTM F436 definitions  Washer
+#           d1_min, d2_max, h, h_max
+F436def = {
+  '12.7':  (26.99, 13.49, 4.50, 2.46),
+  '15.88': (33.34, 17.46, 4.50, 3.10),
+  '19.05': (37.31, 20.64, 4.50, 3.10),
+  '22.23': (44.45, 23.81, 4.50, 3.45),
+  '25.40': (50.80, 26.99, 4.50, 3.45),
+  '28.58': (57.15, 30.16, 4.50, 3.45),
+  '31.75': (63.50, 34.93, 4.50, 3.45),
+  '34.92': (69.85, 38.10, 4.50, 3.45),
+  '38.10': (76.20, 41.28, 4.50, 3.45)}
+
+
 # ISO 7090 definitions Plain washers, chamfered - Normal series
 # chamfer angle 30° / 45°
 # chamfer      h/4 / h/2
@@ -1492,6 +1579,20 @@ iso4032def={
   'M64':   (6.00, 0.7, 69.1, 88.2,104.9, 51.0, 39.3,  95.0)
   }
 
+
+# ASTM A563 Heavy Hex Nut
+#           P,    c,    damax,dw,   e,    m,     mw,   s
+A563Hdef={
+  '12.7':  (1.95, 0.41, 13.0, 16.7, 25.65, 12.3,  8.3,  22.23),
+  '15.88': (2.31, 0.41, 17.3, 22.4, 31.17, 15.48, 11.3, 26.99),
+  '19.05': (2.54, 0.41, 21.6, 28.2, 36.65, 18.65, 13.5, 31.75),
+  '22.23': (2.82, 0.41, 23.7, 31.4, 42.16, 21.83, 15.0, 36.51),
+  '25.4':  (3.18, 0.41, 25.9, 33.7, 47.65, 25.0,  16.2, 41.28),
+  '28.58': (3.63, 0.41, 32.4, 42.8, 53.16, 28.18, 19.4, 46.04),
+  '31.75': (3.63, 0.41, 35.6, 46.6, 58.65, 30.96, 21.4, 50.80),
+  '34.92': (4.23, 0.41, 38.9, 51.2, 64.16, 34.13, 23.5, 55.56),
+  '38.1':  (4.23, 0.41, 42.1, 55.9, 69.65, 37.31, 24.5, 60.33)
+  }
 
 
 # ISO 4033 Hexagon nuts style 2
@@ -1912,7 +2013,7 @@ class Screw(object):
     self.smScrewThrScaleA = 1.0
     self.smScrewThrScaleB = 0.0
 
-  def check_Data(self, ST_text, ND_text, NL_text):
+  def check_Data(self, ST_text, ND_text, NL_text):    
     #FreeCAD.Console.PrintMessage("Data checking" + NL_text + "\n")
     #set screw not ok
     self.objAvailable = False
@@ -1962,6 +2063,12 @@ class Screw(object):
       table = iso4014head
       tab_len = iso4014length
       tab_range = iso4014range
+      Type_text = 'Screw'
+
+    if ST_text == 'A325':
+      table = A325head
+      tab_len = A325length
+      tab_range = A325range
       Type_text = 'Screw'
 
     if ST_text == 'ISO1207':
@@ -2178,9 +2285,11 @@ class Screw(object):
         #dia = float(ND_text.lstrip('M'))
         l = float(NL_text)
         if ST_text == 'ISO4017':
-           table = iso4017head
+           table = iso4017head  
         if ST_text == 'ISO4014':
            table = iso4014head
+        if ST_text == 'A325':
+           table = A325head
         if ST_text == 'EN1662':
            table = en1662def
         if ST_text == 'EN1665':
@@ -2225,6 +2334,8 @@ class Screw(object):
            table = iso7089def
         if ST_text == 'ISO7090':
            table = iso7090def
+        if ST_text == 'F436':
+           table = F436def
         if ST_text == 'ISO7091':
            table = iso7091def
         if ST_text == 'ISO7092':
@@ -2235,6 +2346,8 @@ class Screw(object):
            table = iso7094def
         if ST_text == 'ISO4032':
            table = iso4032def
+        if ST_text == 'A563H':
+           table = A563Hdef
         if ST_text == 'ISO4033':
            table = iso4033def
         if ST_text == 'ISO4035':
@@ -2258,7 +2371,7 @@ class Screw(object):
       else:
         doc=FreeCAD.activeDocument()
         done = False
-        if (ST_text == 'ISO4014') or (ST_text == 'ISO4017'):
+        if (ST_text == 'ISO4014') or (ST_text == 'ISO4017') or (ST_text == 'A325'):
           screw = self.makeIso4017_2(ST_text, ND_text,l)
           Type_text = 'Screw'
           done = True
@@ -2292,11 +2405,13 @@ class Screw(object):
           Type_text = 'Screw'
           done = True
         if (ST_text == 'ISO7089') or (ST_text == 'ISO7090') or (ST_text == 'ISO7093-1') or \
-          (ST_text == 'ISO7091') or (ST_text == 'ISO7092') or (ST_text == 'ISO7094'):
+          (ST_text == 'ISO7091') or (ST_text == 'ISO7092') or (ST_text == 'ISO7094') or \
+          (ST_text == 'F436'):
           screw = self.makeIso7089(ST_text, ND_text)
           Type_text = 'Washer'
           done = True
-        if (ST_text == 'ISO4032') or (ST_text == 'ISO4033') or (ST_text == 'ISO4035'):
+        if (ST_text == 'ISO4032') or (ST_text == 'ISO4033') or (ST_text == 'ISO4035') or \
+            (ST_text == 'A563H'):
           screw = self.makeIso4032(ST_text, ND_text)
           Type_text = 'Nut'
           done = True
@@ -2425,6 +2540,8 @@ class Screw(object):
       d1_min, d2_max, h, h_max = iso7093def[ThreadType]
     if SType == 'ISO7094':
       d1_min, d2_max, h, h_max = iso7094def[ThreadType]
+    if SType == 'F436':
+      d1_min, d2_max, h, h_max = F436def[ThreadType]
       #FreeCAD.Console.PrintMessage("got: " + SType + "\n")
 
     #FreeCAD.Console.PrintMessage("die Scheibe mit d1_min: " + str(d1_min) + "\n")
@@ -3030,9 +3147,9 @@ class Screw(object):
   def makeIso4017_2(self,SType ='ISO4017', ThreadType ='M6',l=40.0):
     dia = self.getDia(ThreadType, False)
     #FreeCAD.Console.PrintMessage("der Kopf mit l: " + str(l) + "\n")
+
     if SType == 'ISO4017':
       P, c, dw, e,k,r,s = iso4017head[ThreadType]
-
       ### make the new code with math.modf(l)
       residue, turns = math.modf((l-1*P)/P)
       halfturns = 2*int(turns)
@@ -3046,8 +3163,14 @@ class Screw(object):
             b = b2
          else:
             b = b3
-
       ### make the new code with math.modf(l)
+      residue, turns = math.modf((b)/P)
+      halfturns = 2*int(turns)
+
+    if SType == 'A325':
+      P, b1, b2, b3, c, dw, e, k, r, s = A325head[ThreadType]
+      b = b1
+      ## make the new code with math.modf(l)
       residue, turns = math.modf((b)/P)
       halfturns = 2*int(turns)
 
@@ -4649,10 +4772,6 @@ class Screw(object):
       return TheSolid
 
 
-
-
-
-
   # make the ISO 4032 Hex-nut
   # make the ISO 4033 Hex-nut
   def makeIso4032(self,SType ='ISO4032', ThreadType ='M6'):
@@ -4666,6 +4785,9 @@ class Screw(object):
     if SType == 'ISO4035':
       # P, c, damax,  dw,    e,     m,   mw,   s_nom
       P, c, da, dw, e, m, mw, s = iso4035def[ThreadType]
+    if SType == 'A563H':
+      # P, c, damax,  dw,    e,     m,   mw,   s_nom
+      P, c, da, dw, e, m, mw, s = A563Hdef[ThreadType]
 
     residue, turns = math.modf(m/P)
     #halfturns = 2*int(turns)

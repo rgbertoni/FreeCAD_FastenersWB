@@ -60,7 +60,7 @@ FSCScrewHoleChart = (
 FSCScrewHoleChartDict = {}
 for s in FSCScrewHoleChart:
   FSCScrewHoleChartDict[s[0]] = s[1]
-       
+
 def FSCGetInnerThread(diam):
   diam = diam.lstrip('(')
   diam = diam.rstrip(')')
@@ -71,6 +71,7 @@ screwTables = {
     #            name,    def table,   length table,  range table,  diam pos*, K pos**
     'ISO4017':  ("Screw",  iso4017head,  iso4017length,  iso4017range,  -1, 0),
     'ISO4014':  ("Screw",  iso4014head,  iso4014length,  iso4014range,  -1, 0),
+    'A325':     ("Screw",  A325head,     A325length,     A325range,     -1, 0),
     'EN1662':   ("Screw",  en1662def,    en1662length,   en1662range,   -1, 0),            
     'EN1665':   ("Screw",  en1665def,    en1665length,   en1665range,   -1, 0),
     'ISO2009':  ("Screw",  iso2009def,   iso2009length,  iso2009range,  4, 5),
@@ -92,13 +93,14 @@ screwTables = {
     'ISO14582': ("Screw",  iso14582def,  iso14582length, iso14582range, 4, 5),
     'ISO14583': ("Screw",  iso14583def,  iso7045length,  iso7046range,  -1, 0),
     'ISO14584': ("Screw",  iso14584def,  iso7045length, iso14584range,  3, 5),
-    'DIN7984':  ("Screw",  din7984def,   din7984length, din7984range, -1, 0),
+    'DIN7984':  ("Screw",  din7984def,   din7984length, din7984range,   -1, 0),
     'ISO7089':  ("Washer", iso7089def,   None,          None,           -1, 0),
     'ISO7090':  ("Washer", iso7090def,   None,          None,           -1, 0),
     #'ISO7091':  ("Washer", iso7091def,   None,          None,           -1, 0), # same as 7089 ??
     'ISO7092':  ("Washer", iso7092def,   None,          None,           -1, 0),
     'ISO7093-1':("Washer", iso7093def,   None,          None,           -1, 0),
     'ISO7094':  ("Washer", iso7094def,   None,          None,           -1, 0),
+    'F436':     ("Washer", F436def,      None,          None,           -1, 0),
     'ISO4032':  ("Nut",    iso4032def,   None,          None,           -1, 0),
     'ISO4033':  ("Nut",    iso4033def,   None,          None,           -1, 0),
     'ISO4035':  ("Nut",    iso4035def,   None,          None,           -1, 0),
@@ -107,6 +109,7 @@ screwTables = {
     'DIN557':   ("Nut",    din557def,    None,          None,           -1, 0),
     'DIN562':   ("Nut",    din562def,    None,          None,           -1, 0),
     'DIN985':   ("Nut",    din985def,    None,          None,           -1, 0),
+    'A563H':    ("Nut",    A563Hdef,      None,          None,           -1, 0),
     'ScrewTap': ("ScrewTap", tuningTable, None,         None,           -1, 0),
     
     # * diam pos = the position within the def table to be used for auto diameter selection, -1 = get size from Mxx

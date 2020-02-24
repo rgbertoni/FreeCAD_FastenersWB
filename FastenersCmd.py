@@ -57,90 +57,92 @@ class FSScrewObject(FSBaseObject):
       obj.addProperty("App::PropertyBool", "matchOuter", "Parameters", "Match outer thread diameter").matchOuter = FastenerBase.FSMatchOuter
  
   def execute(self, fp):
-    '''"Print a short message when doing a recomputation, this method is mandatory" '''
-    
-    try:
-      baseobj = fp.baseObject[0]
-      shape = baseobj.Shape.getElement(fp.baseObject[1][0])
-    except:
-      baseobj = None
-      shape = None
-    
-    # for backward compatibility: add missing attribute if needed
-    self.VerifyCreateMatchOuter(fp)
-    
-    FreeCAD.Console.PrintLog("MatchOuter:" + str(fp.matchOuter) + "\n")
-    
-    typechange = False
-    if fp.type == "ISO7380":
-      fp.type = "ISO7380-1"   # backward compatibility
-    if not (hasattr(self,'type')) or fp.type != self.type:
-      typechange = True
-      curdiam = fp.diameter
-      diameters = screwMaker.GetAllDiams(fp.type)
-      diameters.insert(0, 'Auto')
-      if not(curdiam in diameters):
-        curdiam='Auto'
-      fp.diameter = diameters
-      fp.diameter = curdiam
+    if not FreeCAD.isRestoring():    
+      try:
+        baseobj = fp.baseObject[0]
+        shape = baseobj.Shape.getElement(fp.baseObject[1][0])
+      except:
+        baseobj = None
+        shape = None
       
-    diameterchange = False      
-    if not (hasattr(self,'diameter')) or self.diameter != fp.diameter:
-      diameterchange = True      
-
-    matchouterchange = not (hasattr(self,'matchOuter')) or self.matchOuter != fp.matchOuter
-
-    if fp.diameter == 'Auto' or matchouterchange:
-      d = screwMaker.AutoDiameter(fp.type, shape, baseobj, fp.matchOuter)
-      fp.diameter = d
-      diameterchange = True      
-    else:
-      d = fp.diameter
-    
-    if hasattr(fp,'length'):
-      d , l = screwMaker.FindClosest(fp.type, d, fp.length)
-      if d != fp.diameter:
-        diameterchange = True      
-        fp.diameter = d
+      # for backward compatibility: add missing attribute if needed
+      self.VerifyCreateMatchOuter(fp)
+      
+      FreeCAD.Console.PrintLog("MatchOuter:" + str(fp.matchOuter) + "\n")
+      
+      typechange = False
+      if fp.type == "ISO7380":
+        fp.type = "ISO7380-1"   # backward compatibility
+      if not (hasattr(self,'type')) or fp.type != self.type:
+        typechange = True
+        curdiam = fp.diameter
+        diameters = screwMaker.GetAllDiams(fp.type)
+        diameters.insert(0, 'Auto')
+        if not(curdiam in diameters):
+          curdiam='Auto'
+        fp.diameter = diameters
+        fp.diameter = curdiam
         
-      if l != fp.length or diameterchange or typechange:
-        if diameterchange or typechange:
-          fp.length = screwMaker.GetAllLengths(fp.type, fp.diameter)
-        fp.length = l
-    else:
-      l = 1
-      
-    screwMaker.updateFastenerParameters()  
-      
-    threadType = 'simple'
-    if hasattr(fp,'thread') and fp.thread:
-      threadType = 'real'
-      
-    (key, s) = FastenerBase.FSGetKey(self.itemText, fp.type, d, l, threadType)
-    if s == None:
-      s = screwMaker.createFastener(fp.type, d, l, threadType, True)
-      FastenerBase.FSCache[key] = s
-    else:
-      FreeCAD.Console.PrintLog("Using cached object\n")
+      diameterchange = False      
+      if not (hasattr(self,'diameter')) or self.diameter != fp.diameter:
+        diameterchange = True      
 
-    self.type = fp.type
-    self.diameter = fp.diameter
-    self.matchOuter = fp.matchOuter
-    if hasattr(fp,'length'):
-      self.length = fp.length
-      fp.Label = fp.diameter + 'x' + fp.length + '-' + self.itemText
-    else:
-      fp.Label = fp.diameter + '-' + self.itemText
-    
-    if hasattr(fp,'thread'):
-      self.realThread = fp.thread
-    #self.itemText = s[1]
-    fp.Shape = s
+      matchouterchange = not (hasattr(self,'matchOuter')) or self.matchOuter != fp.matchOuter
 
-    if shape != None:
-      #feature = FreeCAD.ActiveDocument.getObject(self.Proxy)
-      #fp.Placement = FreeCAD.Placement() # reset placement
-      FastenerBase.FSMoveToObject(fp, shape, fp.invert, fp.offset.Value)
+      if fp.diameter == 'Auto' or matchouterchange:
+        if fp.type not in ["A325", "F436", "A563H"]:
+          d = screwMaker.AutoDiameter(fp.type, shape, baseobj, fp.matchOuter)
+        else:
+          d = "12.7"
+        fp.diameter = d
+        diameterchange = True      
+      else:
+        d = fp.diameter
+      
+      if hasattr(fp,'length'):
+        d , l = screwMaker.FindClosest(fp.type, d, fp.length)
+        if d != fp.diameter:
+          diameterchange = True      
+          fp.diameter = d
+          
+        if l != fp.length or diameterchange or typechange:
+          if diameterchange or typechange:
+            fp.length = screwMaker.GetAllLengths(fp.type, fp.diameter)
+          fp.length = l
+      else:
+        l = 1
+        
+      screwMaker.updateFastenerParameters()  
+        
+      threadType = 'simple'
+      if hasattr(fp,'thread') and fp.thread:
+        threadType = 'real'
+        
+      (key, s) = FastenerBase.FSGetKey(self.itemText, fp.type, d, l, threadType)
+      if s == None:
+        s = screwMaker.createFastener(fp.type, d, l, threadType, True)
+        FastenerBase.FSCache[key] = s
+      else:
+        FreeCAD.Console.PrintLog("Using cached object\n")
+
+      self.type = fp.type
+      self.diameter = fp.diameter
+      self.matchOuter = fp.matchOuter
+      if hasattr(fp,'length'):
+        self.length = fp.length
+        fp.Label = fp.diameter + 'x' + fp.length + '-' + self.itemText
+      else:
+        fp.Label = fp.diameter + '-' + self.itemText
+      
+      if hasattr(fp,'thread'):
+        self.realThread = fp.thread
+      #self.itemText = s[1]
+      fp.Shape = s
+
+      if shape != None:
+        #feature = FreeCAD.ActiveDocument.getObject(self.Proxy)
+        #fp.Placement = FreeCAD.Placement() # reset placement
+        FastenerBase.FSMoveToObject(fp, shape, fp.invert, fp.offset.Value)
     
   #def getItemText():
   #  return self.itemText
@@ -259,6 +261,9 @@ FSAddScrewCommand("EN1661", "EN 1661 Hexagon nuts with flange", "Nut")
 FSAddScrewCommand("DIN557", "DIN 557 Square nuts", "Nut")
 FSAddScrewCommand("DIN562", "DIN 562 Square nuts", "Nut")
 FSAddScrewCommand("DIN985", "DIN 985 Nyloc nuts", "Nut")
+FSAddScrewCommand("A325", "ASTM A325 Hex head bolt", "Hex head")
+FSAddScrewCommand("A563H", "ASTM A563 Heavy Hex Nut", "Nut")
+FSAddScrewCommand("F436", "ASTM F436 Washer", "Washer")
 
 
 
