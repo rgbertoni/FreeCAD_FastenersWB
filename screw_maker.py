@@ -88,6 +88,7 @@ __author__ = "Ulrich Brammer <ulrich1a@users.sourceforge.net>"
 import FreeCAD, FreeCADGui, Part, math
 from FreeCAD import Base
 import DraftVecUtils
+import os
 
 try:
   from PySide import QtCore, QtGui
@@ -146,8 +147,9 @@ standard_diameters = {
   'ISO4035': ('M1.6', 'M64'), # ISO 4035 Hexagon thin nuts, chamfered
   'ISO4036': ('M1.6', 'M10'), # ISO 4035 Hexagon thin nuts, unchamfered, todo no function coded
   'EN1661':  ('M5',   'M20'), # EN 1661 Hexagon nuts with flange
-  'A325':    ('12.7', '25.4')
-  } 
+  'A325':    ('12.7', '25.4'),
+  'SelfDrilling': ('12-14', '3/4"'),
+  'WallPlugS': ('S4', 'S20')}
 
 # ISO 4017 Hex-head-screw
 #           P,    c,  dw,    e,     k,   r,   s
@@ -381,7 +383,7 @@ A325head={
   }
 
 
-lengList = [
+screwLengList = [
   25.40,
   31.75,
   38.10,
@@ -420,7 +422,7 @@ lengList = [
 A325length = {}
 
 
-for leng in lengList:
+for leng in screwLengList:
   A325length.update({str(leng): (leng, leng)})
 
 
@@ -1382,6 +1384,22 @@ iso7089def={
   }
 
 
+# Self drill screw
+SelfDrillingdef={
+  '8': (3.25),
+  '12-14': (5.5)}
+
+
+SelfDrillinglength={
+  '1/2"': (12.7),
+  '3/4"': (19.05)}
+
+
+SelfDrillingrange = {
+  '8':  ('1/2"', '1/2"'),
+  '12-14':  ('3/4"', '3/4"')}
+
+
 # ASTM F436 definitions  Washer
 #           d1_min, d2_max, h, h_max
 F436def = {
@@ -1593,6 +1611,20 @@ A563Hdef={
   '34.92': (4.23, 0.41, 38.9, 51.2, 64.16, 34.13, 23.5, 55.56),
   '38.1':  (4.23, 0.41, 42.1, 55.9, 69.65, 37.31, 24.5, 60.33)
   }
+
+
+# Perfuracao, min perfuracao, min ancoragem, comp, diam. paraf
+wallPlugSdef = {
+  'S4': (4, 25, 20, 20, 2.5),
+  'S5': (5, 35, 25, 25, 3.5),
+  'S6': (6, 40, 30, 30, 4),
+  'S7': (7, 40, 30, 30, 4),
+  'S8': (8, 55, 40, 40, 5),
+  'S10': (10, 70, 50, 50, 6),
+  'S12': (12, 80, 60, 60, 10),
+  'S14': (14, 90, 75, 75, 12),
+  'S16': (16, 100, 80, 80, 12),
+  'S20': (20, 120, 90, 90, 16)}
 
 
 # ISO 4033 Hexagon nuts style 2
@@ -1996,11 +2028,6 @@ class Ui_ScrewMaker(object):
     myObj = self.theScrew.createScrew(ST_text, ND_text, NL_text, threadType)
 
 
-
-
-
-
-
 class Screw(object):
   def __init__(self):
     self.objAvailable = True
@@ -2182,6 +2209,10 @@ class Screw(object):
       table = iso4032def
       Type_text = 'Nut'
 
+    if ST_text == 'WallPlugS':
+      table = wallPlugSdef
+      Type_text = 'Plug'
+
     if ST_text == 'ISO4033':
       table = iso4033def
       Type_text = 'Nut'
@@ -2283,13 +2314,18 @@ class Screw(object):
         #ST_text = str(self.ScrewType.currentText())
         #ST_text = ST_text.split(':')[0]
         #dia = float(ND_text.lstrip('M'))
-        l = float(NL_text)
+        if ST_text == "SelfDrilling":
+          l = NL_text
+        else:
+          l = float(NL_text)
         if ST_text == 'ISO4017':
            table = iso4017head  
         if ST_text == 'ISO4014':
            table = iso4014head
         if ST_text == 'A325':
            table = A325head
+        if ST_text == 'SelfDrilling':
+           table = SelfDrillingdef
         if ST_text == 'EN1662':
            table = en1662def
         if ST_text == 'EN1665':
@@ -2346,6 +2382,8 @@ class Screw(object):
            table = iso7094def
         if ST_text == 'ISO4032':
            table = iso4032def
+        if ST_text == 'WallPlugS':
+           table = wallPlugSdef
         if ST_text == 'A563H':
            table = A563Hdef
         if ST_text == 'ISO4033':
@@ -2374,6 +2412,14 @@ class Screw(object):
         if (ST_text == 'ISO4014') or (ST_text == 'ISO4017') or (ST_text == 'A325'):
           screw = self.makeIso4017_2(ST_text, ND_text,l)
           Type_text = 'Screw'
+          done = True
+        if (ST_text == 'SelfDrilling'):
+          screw = self.makeFromString(ST_text, ND_text, l)
+          Type_text = 'Screw'
+          done = True
+        if (ST_text == 'WallPlugS'):
+          screw = self.makeFromString(ST_text, ND_text)
+          Type_text = 'Plug'
           done = True
         if (ST_text == 'EN1662') or (ST_text == 'EN1665'):
           screw = self.makeEN1662_2(ST_text, ND_text,l)
@@ -3140,6 +3186,23 @@ class Screw(object):
 
     return head
 
+
+  def makeFromString(self, type, diameter, length=""):
+    __dir__ = os.path.dirname(__file__)
+    dirShapes = os.path.join(__dir__, 'ShapeString')
+    if length:
+      sep = "x"
+      length = length.replace("/", "-").split('"')[0]
+    else:
+      sep = ""
+      length = ""
+    file = dirShapes + "\\" + type + "_" + diameter + sep + length + ".xml"
+    text_file = open(file, "r")
+    shapeStr = text_file.read()
+    text_file.close()
+    shape = Part.Shape()
+    shape.importBrepFromString(shapeStr)
+    return shape
 
 
   # make the ISO 4017 Hex-head-screw

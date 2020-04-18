@@ -2,12 +2,13 @@
 
 # A Wrapper to Ulrich's screw_maker macro
 
-import FreeCAD, FreeCADGui, Part, math
+import FreeCAD, Part, math
 from FreeCAD import Base
 import DraftVecUtils
+import Utils
 import FastenerBase
 
-from PySide import QtCore, QtGui
+from PySide import QtCore
 from screw_maker import *
 import FSNuts
 from FSNuts import din557def, din562def, din985def
@@ -94,6 +95,8 @@ screwTables = {
     'ISO14583': ("Screw",  iso14583def,  iso7045length,  iso7046range,  -1, 0),
     'ISO14584': ("Screw",  iso14584def,  iso7045length, iso14584range,  3, 5),
     'DIN7984':  ("Screw",  din7984def,   din7984length, din7984range,   -1, 0),
+    'SelfDrilling': ("Screw", SelfDrillingdef, SelfDrillinglength, SelfDrillingrange, -1, 0),
+    'WallPlugS': ("Plug",  wallPlugSdef, None,          None,           -1, 0),
     'ISO7089':  ("Washer", iso7089def,   None,          None,           -1, 0),
     'ISO7090':  ("Washer", iso7090def,   None,          None,           -1, 0),
     #'ISO7091':  ("Washer", iso7091def,   None,          None,           -1, 0), # same as 7089 ??
@@ -111,7 +114,7 @@ screwTables = {
     'DIN985':   ("Nut",    din985def,    None,          None,           -1, 0),
     'A563H':    ("Nut",    A563Hdef,      None,          None,           -1, 0),
     'ScrewTap': ("ScrewTap", tuningTable, None,         None,           -1, 0),
-    
+
     # * diam pos = the position within the def table to be used for auto diameter selection, -1 = get size from Mxx
     # * K Pos = the position within the def table to be used for countersunk holes creation
 }
@@ -147,16 +150,20 @@ class FSScrewMaker(Screw):
               
       # make sure length in range
       if range_table != None:
-        minl , maxl = range_table[diam]
-        if float(len) < float(minl):
-          len = minl
-        if float(len) > float(maxl):
-          len = maxl
+        if type in ["SelfDrilling", "WallPlugS"]:
+          len = range_table[diam][0]
+        else:
+          minl , maxl = range_table[diam]
+          if float(len) < float(minl):
+            len = minl
+          if float(len) > float(maxl):
+            len = maxl
         
       return (diam, len)
         
         
-    def AutoDiameter(self, type, holeObj, baseobj = None, matchOuter = FastenerBase.FSMatchOuter):
+    def AutoDiameter(
+      self, type, holeObj, baseobj=None, matchOuter=FastenerBase.FSMatchOuter):
       ''' Calculate screw diameter automatically based on given hole '''
       res = 'M6'
       #matchOuter = FastenerBase.FSMatchOuter
@@ -200,22 +207,35 @@ class FSScrewMaker(Screw):
       if not(type in screwTables):
         return "None"
       return screwTables[type][0]
-    
+
     def GetAllDiams(self, type):
       FreeCAD.Console.PrintLog("Get diams for type:" + str(type) + "\n")
-      return sorted(screwTables[type][1], key = FastenerBase.MToFloat)
+      if type in ["SelfDrilling", "WallPlugS"]:
+        return sorted(screwTables[type][1], key = None)
+      else:
+        return sorted(screwTables[type][1], key = FastenerBase.MToFloat)
 
     def GetAllLengths(self, type, diam):
       lens = screwTables[type][2]
       range = screwTables[type][3][diam]
       list = []
-      min = float(range[0])
-      max = float(range[1])
+      try:
+        min = float(range[0])
+        max = float(range[1])
+      except ValueError:
+        min = Utils.inchToFloat(range[0])
+        max = Utils.inchToFloat(range[1])
       for len in lens:
-        l = float(len)
+        try:
+          l = float(len)
+        except ValueError:
+          l = Utils.inchToFloat(len)
         if l >= min and l <= max:
           list.append(len)
-      list.sort(key = FastenerBase.MToFloat)
+      try:
+        list.sort(key = FastenerBase.MToFloat)
+      except ValueError:
+        pass
       return list
 
     def GetAllCountersunkTypes(self):

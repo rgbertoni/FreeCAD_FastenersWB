@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
-###################################################################################
+###############################################################################
 #
 #  FastenersCmd.py
-#  
+#
 #  Copyright 2015 Shai Seger <shaise at gmail dot com>
-#  
+#
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 2 of the License, or
 #  (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
-#  
-###################################################################################
+#
+#
+###############################################################################
 
 from FreeCAD import Gui
 import FreeCAD, FreeCADGui, Part, os
@@ -36,22 +36,55 @@ screwMaker = ScrewMaker.Instance()
 class FSScrewObject(FSBaseObject):
   def __init__(self, obj, type, attachTo):
     '''"Add screw type fastener" '''
+    self.type = type
     FSBaseObject.__init__(self, obj, attachTo)
     self.itemText = screwMaker.GetTypeName(type)
-    diameters = screwMaker.GetAllDiams(type)
-    diameters.insert(0, 'Auto')
-    #self.Proxy = obj.Name
-    
-    obj.addProperty("App::PropertyEnumeration","type","Parameters","Screw type").type = screwMaker.GetAllTypes(self.itemText)
-    obj.addProperty("App::PropertyEnumeration","diameter","Parameters","Screw diameter standard").diameter = diameters
+    self.diameters = screwMaker.GetAllDiams(type)
+    self.diameters.insert(0, 'Auto')
+    obj.Proxy = self
+    self.setProperties(obj)
+
+  def setProperties(self, obj):
+    propertiesList = obj.PropertiesList
+    if "type" not in propertiesList:
+      obj.addProperty("App::PropertyEnumeration","type","Parameters","Screw type").type = screwMaker.GetAllTypes(self.itemText)
+      obj.type = self.type
+    if "diameter" not in propertiesList:
+      obj.addProperty("App::PropertyEnumeration","diameter","Parameters","Screw diameter standard").diameter = self.diameters
     self.VerifyCreateMatchOuter(obj)
     if (self.itemText == "Screw"):
-      obj.addProperty("App::PropertyEnumeration","length","Parameters","Screw length").length = screwMaker.GetAllLengths(type, diameters[1])
+      if "length" not in propertiesList:
+        obj.addProperty("App::PropertyEnumeration","length","Parameters","Screw length").length = screwMaker.GetAllLengths(self.type, self.diameters[1])
     if (self.itemText != "Washer"):
-      obj.addProperty("App::PropertyBool", "thread", "Parameters", "Generate real thread").thread = False
-    obj.type = type
-    obj.Proxy = self
-    
+      if "thread" not in propertiesList:
+        obj.addProperty("App::PropertyBool", "thread", "Parameters", "Generate real thread").thread = False
+    # ImportName
+    if "ImportName" not in propertiesList:
+        obj.addProperty("App::PropertyString",
+                        "ImportName",
+                        "",
+                        "Import name")
+        obj.setEditorMode("ImportName", 2)
+    # ObjectInComponent
+    if "ObjectInComponent" not in propertiesList:
+        obj.addProperty("App::PropertyString",
+                        "ObjectInComponent",
+                        "",
+                        "Object in component")
+        obj.setEditorMode("ObjectInComponent", 2)
+    # UUID
+    if "UUID" not in propertiesList:
+        obj.addProperty("App::PropertyUUID",
+                        "UUID",
+                        "",
+                        "UUID").UUID
+
+  def onDocumentRestored(self, obj):
+      self.setProperties(obj)
+      if not obj.ImportName:
+          obj.ImportName = obj.Name
+      FreeCAD.ActiveDocument.recompute([obj])
+
   def VerifyCreateMatchOuter(self, obj):
     if not (hasattr(obj,'matchOuter')):
       obj.addProperty("App::PropertyBool", "matchOuter", "Parameters", "Match outer thread diameter").matchOuter = FastenerBase.FSMatchOuter
@@ -90,10 +123,16 @@ class FSScrewObject(FSBaseObject):
       matchouterchange = not (hasattr(self,'matchOuter')) or self.matchOuter != fp.matchOuter
 
       if fp.diameter == 'Auto' or matchouterchange:
-        if fp.type not in ["A325", "F436", "A563H"]:
-          d = screwMaker.AutoDiameter(fp.type, shape, baseobj, fp.matchOuter)
+        if fp.type in [
+            "A325", "F436", "A563H", "SelfDrilling", "WallPlugS"]:          
+          if fp.type == "SelfDrilling":
+            d = "12-14"
+          elif fp.type == "WallPlugS":
+            d = "S10"
+          else:
+            d = "12.7"
         else:
-          d = "12.7"
+          d = screwMaker.AutoDiameter(fp.type, shape, baseobj, fp.matchOuter)
         fp.diameter = d
         diameterchange = True      
       else:
@@ -137,6 +176,8 @@ class FSScrewObject(FSBaseObject):
       if hasattr(fp,'thread'):
         self.realThread = fp.thread
       #self.itemText = s[1]
+      import Utils
+      # s = Utils.setElementMap(s, id=fp.ID)
       fp.Shape = s
 
       if shape != None:
@@ -264,7 +305,8 @@ FSAddScrewCommand("DIN985", "DIN 985 Nyloc nuts", "Nut")
 FSAddScrewCommand("A325", "ASTM A325 Hex head bolt", "Hex head")
 FSAddScrewCommand("A563H", "ASTM A563 Heavy Hex Nut", "Nut")
 FSAddScrewCommand("F436", "ASTM F436 Washer", "Washer")
-
+FSAddScrewCommand("SelfDrilling", "Self drilling screw", "Hex head")
+FSAddScrewCommand("WallPlugS", "Wall plug type S", "Wall plug")
 
 
 #deprecated    
